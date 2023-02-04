@@ -145,7 +145,7 @@ class MSS_system:
         self.server_2 = self.Server_2(self)
         self.RG = self.Randomness_Generator(self, clients)
 
-        self.operation_record = {}      # operation 紀錄
+        # self.operation_record = {}      # operation 紀錄
 
     def call_server_1(self):
         return self.server_1
@@ -159,39 +159,15 @@ class MSS_system:
     def call_global_parameter(self):
         return self.n, self.k, self.t
 
-    def print_operation_record(self):
-
-        print("Operation Record:")
-        print()
-
-        print("- Original Secret index: 0 -", self.k - 1)
-        print("- PRIME: ", PRIME)
-        print()
-
-        operation_record = self.operation_record
-
-        exception_keywords = ["participants", "operand_a", "operand_b"]
-        
-        print("- Operation record：")
-
-        if len(operation_record) == 0:
-            print("None operation！")
-        else:
-            for operation_id in operation_record:
-                print("-- index:" , operation_id , end = ' ')
-
-                for key in operation_record[operation_id]:
-                    if key not in exception_keywords:
-                        print(" , " , key , ":" , operation_record[operation_id][key] , end = ' ')
-
-                print(" , participants threshold:" , self.t[operation_id])
+    def update_threshold(self, t):
+        self.t = t
 
     class Server_1:
         
         def __init__(self, MSS_system):
             self.MSS = MSS_system
             self.share = None
-            # self.operation_record = {}      # operation 紀錄
+            self.operation_record = {}      # operation 紀錄
         
         def get_share(self, Public_Share):
             self.share = Public_Share
@@ -207,12 +183,213 @@ class MSS_system:
             new_share_4 = share_list_addition( share_list_addition(new_share_1, new_share_2), share_list_addition(new_share_3, share_c_list) )
             return new_share_4[0 : num]
         
+        def call_operation_record(self , i):
+            return self.operation_record[i]
+        
+        def print_operation_record(self):
+
+            n , k , t = self.MSS.call_global_parameter()
+    
+            print("Operation Record:")
+            print()
+
+            print("- Original Secret index: 0 -", k - 1)
+            print("- PRIME: ", PRIME)
+            print()
+
+            operation_record = self.operation_record
+
+            exception_keywords = ["participants", "operand_a", "operand_b"]
+            
+            print("- Operation record：")
+
+            if len(operation_record) == 0:
+                print("None operation！")
+            else:
+                for operation_id in operation_record:
+                    print("-- index:" , operation_id , end = ' ')
+
+                    for key in operation_record[operation_id]:
+                        if key not in exception_keywords:
+                            print(" , " , key , ":" , operation_record[operation_id][key] , end = ' ')
+
+                    print(" , participants threshold:" , t[operation_id])
+
+        # ====
+
+        # MSS Protocols
+
+        def collect_shares(self, participants, i , randomness_index_1 , randomness_index_2):
+
+            RG = self.MSS.call_RG()
+            n , k , t = self.MSS.call_global_parameter()
+
+            server_2 = self.MSS.call_server_2()
+
+            share_a1, share_b1, share_c1, d1, e1 = RG.sent_randomness(randomness_index_1)
+            share_a2, share_b2, share_c2, d2, e2 = RG.sent_randomness(randomness_index_2)
+
+            collect_shares_1 = []
+            collect_shares_2 = []
+
+            for client in  participants:
+                id = client.sent_id()
+                collect_shares_1.append( client.sent_new_share(share_a1[id], share_b1[id], share_c1[id], d1, e1) )     # 模擬 client 各自計算 share (= 乘上 randomness) 再傳出。
+                collect_shares_2.append( client.sent_new_share(share_a2[id], share_b2[id], share_c2[id], d2, e2) )     # 模擬 client 各自計算 share (= 乘上 randomness) 再傳出。
+
+            public_num = 0      # 需要由 server 給出的 public share 數量
+
+            if len(participants) < t[i]:
+                raise Exception("Need more participant share！")
+            else: 
+                public_num = n + 1 - len(participants)
+
+            if i < k:      # 非運算
+                collect_shares_1 = collect_shares_1 + self.sent_new_share( i, public_num, share_a1[ n : ], share_b1[ n : ], share_c1[ n : ], d1, e1 )
+                collect_shares_2 = collect_shares_2 + server_2.sent_new_share( i, public_num, share_a2[ n : ], share_b2[ n : ], share_c2[ n : ], d2, e2 )
+            else:               # 運算結果 
+                operation_record = self.operation_record[i]
+
+                for client in operation_record["participants"]:
+                    if client not in participants:
+                        raise Exception("Need particular operation participants！")
+                
+                ( a , a_randomness_index_1 , a_randomness_index_2 ) = operation_record["operand_a"]
+                ( b,  b_randomness_index_1 , b_randomness_index_2 ) = operation_record["operand_b"]
+
+                operation_shares_a_1, operation_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
+                operation_shares_b_1, operation_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
+                
+                if operation_record["operation"] == "+":
+                    pseudo_secret_a_1 = operation_record["pseudo_secret_a_1"]
+                    pseudo_secret_b_1 = operation_record["pseudo_secret_b_1"]
+                    
+                    collect_shares_1 = share_list_constant_multiplication(operation_shares_a_1, pseudo_secret_b_1)
+                    collect_shares_2 = share_list_addition(share_list_constant_multiplication(operation_shares_a_2, pseudo_secret_b_1) , share_list_constant_multiplication(operation_shares_b_2, pseudo_secret_a_1))
+                elif operation_record["operation"] == "*":
+                    pseudo_secret_a_1 = operation_record["pseudo_secret_a_1"]
+                    pseudo_secret_b_2 = operation_record["pseudo_secret_b_2"]
+
+                    collect_shares_1 = share_list_constant_multiplication(operation_shares_b_1, pseudo_secret_a_1)
+                    collect_shares_2 = share_list_constant_multiplication(operation_shares_a_2, pseudo_secret_b_2)
+                else:
+                    raise Exception("Unrecognizable operation！")
+                
+                new_collect_share_1_1 = share_list_constant_multiplication( share_list_minus(collect_shares_1, share_a1), e1 )
+                # new_collect_share_1_1 = share_list_constant_multiplication( share_d1, e1 )
+                new_collect_share_1_2 = share_list_constant_multiplication( share_b1, d1 )
+                new_collect_share_1_3 = share_list_constant_multiplication( share_a1, e1 )
+                new_collect_share_1_4 = share_list_addition( share_list_addition(new_collect_share_1_1, new_collect_share_1_2), share_list_addition(new_collect_share_1_3, share_c1) )
+
+                new_collect_share_2_1 = share_list_constant_multiplication( share_list_minus(collect_shares_2, share_a2), e2 )
+                # new_collect_share_2_1 = share_list_constant_multiplication( share_d2, e2 )
+                new_collect_share_2_2 = share_list_constant_multiplication( share_b2, d2 )
+                new_collect_share_2_3 = share_list_constant_multiplication( share_a2, e2 )
+                new_collect_share_2_4 = share_list_addition( share_list_addition(new_collect_share_2_1, new_collect_share_2_2), share_list_addition(new_collect_share_2_3, share_c2) )
+
+                collect_shares_1 = new_collect_share_1_4
+                collect_shares_2 = new_collect_share_2_4
+
+            return collect_shares_1 , collect_shares_2
+        
+        def addition(self, participants, a, b):
+            
+            RG = self.MSS.call_RG()
+            n , k , t = self.MSS.call_global_parameter()
+        
+            a_randomness_index_1, a_randomness_index_2 = RG.poly_randomness(a)
+
+            collect_shares_a_1 , collect_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
+
+            pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
+
+            b_randomness_index_1, b_randomness_index_2 = RG.poly_randomness(b)
+            
+            collect_shares_b_1 , collect_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
+
+            pseudo_secret_b_1 = reconstructSecret(collect_shares_b_1)
+
+            # ====
+            
+            operation_threshold = max(t[a] , t[b])
+            
+            operation_index = len(t)
+
+            self.MSS.update_threshold(t + [ operation_threshold ])
+
+            self.operation_record[operation_index] = {
+                "info (index operation index)": str(a) + " + "+ str(b),
+                "operation": "+",
+                "operand_a": (a , a_randomness_index_1 , a_randomness_index_2),
+                "operand_b": (b , b_randomness_index_1 , b_randomness_index_2),
+                "pseudo_secret_a_1": pseudo_secret_a_1,
+                "pseudo_secret_b_1": pseudo_secret_b_1,
+                "participants": participants
+            }
+
+            return operation_index
+
+        def multiplication(self, participants, a, b):
+
+            RG = self.MSS.call_RG()
+            n , k , t = self.MSS.call_global_parameter()
+
+            a_randomness_index_1, a_randomness_index_2 = RG.poly_randomness(a)
+
+            collect_shares_a_1 , collect_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
+
+            pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
+
+            b_randomness_index_1, b_randomness_index_2 = RG.poly_randomness(b)
+            
+            collect_shares_b_1 , collect_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
+
+            pseudo_secret_b_2 = reconstructSecret(collect_shares_b_2)
+
+            # ==== 
+
+            operation_threshold = max(t[a] , t[b])
+            
+            operation_index = len(t)
+
+            self.MSS.update_threshold(t + [ operation_threshold ])
+
+            self.operation_record[operation_index] = {
+                "info (index operation index)": str(a) + " * "+ str(b),
+                "operation": "*",
+                "operand_a": (a , a_randomness_index_1 , a_randomness_index_2),
+                "operand_b": (b , b_randomness_index_1 , b_randomness_index_2),
+                "pseudo_secret_a_1": pseudo_secret_a_1,
+                "pseudo_secret_b_2": pseudo_secret_b_2,
+                "participants": participants
+            }
+
+            return operation_index
+
+        def reconstruct_Secret(self, participants, i):
+
+            RG = self.MSS.call_RG()
+            n , k , t = self.MSS.call_global_parameter()
+
+            randomness_index_1, randomness_index_2 = RG.poly_randomness(i)
+
+            collect_shares_1 , collect_shares_2 = self.collect_shares(participants, i , randomness_index_1, randomness_index_2)
+
+            pseudo_secret_1 = reconstructSecret(collect_shares_1)
+            pseudo_secret_2 = reconstructSecret(collect_shares_2)
+
+            # print("i:", i , ", pseudo_secret_1:", pseudo_secret_1 , ", pseudo_secret_2:", pseudo_secret_2)
+
+            secret = _divmod(pseudo_secret_2, pseudo_secret_1, PRIME)
+
+            return secret % PRIME
+        
     class Server_2:
         
         def __init__(self, MSS_system):
             self.MSS = MSS_system
             self.share = None
-            self.operation_record = {}      # operation 紀錄
+            # self.operation_record = {}      # operation 紀錄
         
         def get_share(self, Public_Share):
             self.share = Public_Share
@@ -251,9 +428,10 @@ class MSS_system:
 
             # ====
 
-            if i < k:               # 非運算
+            server_1 = self.MSS.call_server_1()
+            server_2 = self.MSS.call_server_2()
 
-                server_1 = self.MSS.call_server_1()
+            if i < k:               # 非運算
 
                 a1 = np.random.randint(1, random_size)
                 b1 = np.random.randint(1, random_size)
@@ -288,8 +466,6 @@ class MSS_system:
 
                 # ====
 
-                server_2 = self.MSS.call_server_2()
-
                 a2 = np.random.randint(1, random_size)
                 b2 = np.random.randint(1, random_size)
                 c2 = (a2 * b2) % PRIME 
@@ -322,15 +498,15 @@ class MSS_system:
                 }
             
             else:                   # 運算
-                operation_record = self.MSS.operation_record[i]
+                operation_record = server_1.call_operation_record(i)
                 
                 participants = operation_record["participants"]
                 
                 ( a , a_randomness_index_1 , a_randomness_index_2 ) = operation_record["operand_a"]
                 ( b,  b_randomness_index_1 , b_randomness_index_2 ) = operation_record["operand_b"]
 
-                operation_shares_a_1, operation_shares_a_2 = self.MSS.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
-                operation_shares_b_1, operation_shares_b_2 = self.MSS.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
+                operation_shares_a_1, operation_shares_a_2 = server_1.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
+                operation_shares_b_1, operation_shares_b_2 = server_1.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
 
                 # operation_shares_a_1, operation_shares_a_2 = self.MSS.collect_shares(self.clients , a , a_randomness_index_1, a_randomness_index_2)
                 # operation_shares_b_1, operation_shares_b_2 = self.MSS.collect_shares(self.clients , b , b_randomness_index_1, b_randomness_index_2)
@@ -445,164 +621,32 @@ class MSS_system:
                             print(" , " , key , ":" , randomness_record[randomness_id][key] , end = ' ')
                     
                     print()
-
     # ====
 
     # MSS Protocols
 
     def addition(self, participants, a, b):
 
-        a_randomness_index_1, a_randomness_index_2 = self.RG.poly_randomness(a)
-
-        collect_shares_a_1 , collect_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
-
-        pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
-
-        b_randomness_index_1, b_randomness_index_2 = self.RG.poly_randomness(b)
-        
-        collect_shares_b_1 , collect_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
-
-        pseudo_secret_b_1 = reconstructSecret(collect_shares_b_1)
-
-        # ====
-        
-        operation_threshold = max(self.t[a] , self.t[b])
-        
-        operation_index = len(self.t)
-
-        self.t = self.t + [ operation_threshold ]
-
-        self.operation_record[operation_index] = {
-            "info (index operation index)": str(a) + " + "+ str(b),
-            "operation": "+",
-            "operand_a": (a , a_randomness_index_1 , a_randomness_index_2),
-            "operand_b": (b , b_randomness_index_1 , b_randomness_index_2),
-            "pseudo_secret_a_1": pseudo_secret_a_1,
-            "pseudo_secret_b_1": pseudo_secret_b_1,
-            "participants": participants
-        }
+        operation_index = self.server_1.addition(participants, a, b)
 
         return operation_index
 
     def multiplication(self, participants, a, b):
 
-        a_randomness_index_1, a_randomness_index_2 = self.RG.poly_randomness(a)
-
-        collect_shares_a_1 , collect_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
-
-        pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
-
-        b_randomness_index_1, b_randomness_index_2 = self.RG.poly_randomness(b)
-        
-        collect_shares_b_1 , collect_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
-
-        pseudo_secret_b_2 = reconstructSecret(collect_shares_b_2)
-
-        # ==== 
-
-        operation_threshold = max(self.t[a] , self.t[b])
-        
-        operation_index = len(self.t)
-
-        self.t = self.t + [ operation_threshold ]
-
-        self.operation_record[operation_index] = {
-            "info (index operation index)": str(a) + " * "+ str(b),
-            "operation": "*",
-            "operand_a": (a , a_randomness_index_1 , a_randomness_index_2),
-            "operand_b": (b , b_randomness_index_1 , b_randomness_index_2),
-            "pseudo_secret_a_1": pseudo_secret_a_1,
-            "pseudo_secret_b_2": pseudo_secret_b_2,
-            "participants": participants
-        }
+        operation_index = self.server_1.multiplication(participants, a, b)
 
         return operation_index
 
-    def collect_shares(self, participants, i , randomness_index_1 , randomness_index_2):
-
-        # share_a1, share_b1, share_c1, share_d1, d1, e1 = self.RG.sent_randomness(randomness_index_1)
-        # share_a2, share_b2, share_c2, share_d2, d2, e2 = self.RG.sent_randomness(randomness_index_2)
-
-        share_a1, share_b1, share_c1, d1, e1 = self.RG.sent_randomness(randomness_index_1)
-        share_a2, share_b2, share_c2, d2, e2 = self.RG.sent_randomness(randomness_index_2)
-
-        collect_shares_1 = []
-        collect_shares_2 = []
-
-        for client in  participants:
-            id = client.sent_id()
-            collect_shares_1.append( client.sent_new_share(share_a1[id], share_b1[id], share_c1[id], d1, e1) )     # 模擬 client 各自計算 share (= 乘上 randomness) 再傳出。
-            collect_shares_2.append( client.sent_new_share(share_a2[id], share_b2[id], share_c2[id], d2, e2) )     # 模擬 client 各自計算 share (= 乘上 randomness) 再傳出。
-
-        public_num = 0      # 需要由 server 給出的 public share 數量
-
-        if len(participants) < self.t[i]:
-            raise Exception("Need more participant share！")
-        else: 
-            public_num = self.n + 1 - len(participants)
-
-        if i < self.k:      # 非運算
-            collect_shares_1 = collect_shares_1 + self.server_1.sent_new_share( i, public_num, share_a1[ self.n : ], share_b1[ self.n : ], share_c1[ self.n : ], d1, e1 )
-            collect_shares_2 = collect_shares_2 + self.server_2.sent_new_share( i, public_num, share_a2[ self.n : ], share_b2[ self.n : ], share_c2[ self.n : ], d2, e2 )
-        else:               # 運算結果 
-            operation_record = self.operation_record[i]
-
-            for client in operation_record["participants"]:
-                if client not in participants:
-                    raise Exception("Need particular operation participants！")
-            
-            ( a , a_randomness_index_1 , a_randomness_index_2 ) = operation_record["operand_a"]
-            ( b,  b_randomness_index_1 , b_randomness_index_2 ) = operation_record["operand_b"]
-
-            operation_shares_a_1, operation_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
-            operation_shares_b_1, operation_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
-            
-            if operation_record["operation"] == "+":
-                pseudo_secret_a_1 = operation_record["pseudo_secret_a_1"]
-                pseudo_secret_b_1 = operation_record["pseudo_secret_b_1"]
-                
-                collect_shares_1 = share_list_constant_multiplication(operation_shares_a_1, pseudo_secret_b_1)
-                collect_shares_2 = share_list_addition(share_list_constant_multiplication(operation_shares_a_2, pseudo_secret_b_1) , share_list_constant_multiplication(operation_shares_b_2, pseudo_secret_a_1))
-            elif operation_record["operation"] == "*":
-                pseudo_secret_a_1 = operation_record["pseudo_secret_a_1"]
-                pseudo_secret_b_2 = operation_record["pseudo_secret_b_2"]
-
-                collect_shares_1 = share_list_constant_multiplication(operation_shares_b_1, pseudo_secret_a_1)
-                collect_shares_2 = share_list_constant_multiplication(operation_shares_a_2, pseudo_secret_b_2)
-            else:
-                raise Exception("Unrecognizable operation！")
-               
-            new_collect_share_1_1 = share_list_constant_multiplication( share_list_minus(collect_shares_1, share_a1), e1 )
-            # new_collect_share_1_1 = share_list_constant_multiplication( share_d1, e1 )
-            new_collect_share_1_2 = share_list_constant_multiplication( share_b1, d1 )
-            new_collect_share_1_3 = share_list_constant_multiplication( share_a1, e1 )
-            new_collect_share_1_4 = share_list_addition( share_list_addition(new_collect_share_1_1, new_collect_share_1_2), share_list_addition(new_collect_share_1_3, share_c1) )
-
-            new_collect_share_2_1 = share_list_constant_multiplication( share_list_minus(collect_shares_2, share_a2), e2 )
-            # new_collect_share_2_1 = share_list_constant_multiplication( share_d2, e2 )
-            new_collect_share_2_2 = share_list_constant_multiplication( share_b2, d2 )
-            new_collect_share_2_3 = share_list_constant_multiplication( share_a2, e2 )
-            new_collect_share_2_4 = share_list_addition( share_list_addition(new_collect_share_2_1, new_collect_share_2_2), share_list_addition(new_collect_share_2_3, share_c2) )
-
-            collect_shares_1 = new_collect_share_1_4
-            collect_shares_2 = new_collect_share_2_4
-
-        return collect_shares_1 , collect_shares_2
-
     def reconstruct_Secret(self, participants, i):
 
-        randomness_index_1, randomness_index_2 = self.RG.poly_randomness(i)
+        secret = self.server_1.reconstruct_Secret(participants, i)
 
-        collect_shares_1 , collect_shares_2 = self.collect_shares(participants, i , randomness_index_1, randomness_index_2)
+        return secret
+    
+    def print_operation_record(self):
 
-        pseudo_secret_1 = reconstructSecret(collect_shares_1)
-        pseudo_secret_2 = reconstructSecret(collect_shares_2)
+        secret = self.server_1.print_operation_record()
 
-        # print("i:", i , ", pseudo_secret_1:", pseudo_secret_1 , ", pseudo_secret_2:", pseudo_secret_2)
-
-        secret = _divmod(pseudo_secret_2, pseudo_secret_1, PRIME)
-
-        return secret % PRIME
     
 # ====
 
@@ -740,7 +784,7 @@ if __name__ == '__main__':
 
     operation_index = MSS.addition(pool, i , j)
     reconstruct = MSS.reconstruct_Secret(pool, operation_index)
-    
+
     print("Secret addition:" , MSS.reconstruct_Secret(pool, i) , "+" , MSS.reconstruct_Secret(pool, j))
     print("Reconstructed secret:", reconstruct)
     print()
@@ -758,7 +802,7 @@ if __name__ == '__main__':
 
     operation_index = MSS.addition(pool, i , j)
     reconstruct = MSS.reconstruct_Secret(pool, operation_index)
-    
+
     print("Secret addition:" , MSS.reconstruct_Secret(pool, i) , "+" , MSS.reconstruct_Secret(pool, j))
     print("Reconstructed secret:", reconstruct)
     print()
