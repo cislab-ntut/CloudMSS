@@ -1,0 +1,54 @@
+
+query instance = 1
+epoch = 3
+
+# u：參與者數量。
+u = 2
+
+# T：各項 secret 的 threshold。
+T = 2
+
+====
+
+資料集:iris
+Instances: 150 , Attributes: 4 , Class: 3
+
+Epoch:  3  => (Train:  149 , Test:  1 , Test/All:  0.00667 )
+Mode: knn  正確率  100.0 %  耗時  0.0010001659393310547
+Mode: MSS_kNN  正確率  100.0 %  耗時  6.9200301965077715
+Mode: dct  正確率  100.0 %  耗時  0.0003445943196614583
+
+150*4 = 600 => 7 sec
+
+(0.01167 sec / attribute)
+
+====
+
+資料集:breast_cancer
+Instances: 569 , Attributes: 30 , Class: 2
+
+Epoch:  3  => (Train:  568 , Test:  1 , Test/All:  0.00176 )
+Mode: knn  正確率  100.0 %  耗時  0.0006669362386067709
+Mode: MSS_kNN  正確率  100.0 %  耗時  256.2968838214874
+Mode: dct  正確率  100.0 %  耗時  0.011101722717285156
+
+569*30 = 17070 => 256 sec = 4.2 min
+
+(0.015 sec / attribute)
+
+====
+
+資料集:digits
+Instances: 1797 , Attributes: 64 , Class: 10
+
+Epoch:  3  => (Train:  1796 , Test:  1 , Test/All:  0.00056 )
+Mode: knn  正確率  100.0 %  耗時  0.01565694808959961
+Mode: MSS_kNN  正確率  100.0 %  耗時  5684.697420120239
+Mode: dct  正確率  100.0 %  耗時  0.10537830988566081
+
+1797*64 = 115008 => 5684 sec = 94 min = 1 h 30 min
+
+(0.049 sec / attribute)
+
+====
+

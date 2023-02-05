@@ -1,8 +1,7 @@
 from ast import Or
 from asyncio.windows_events import NULL
 
-import random
-from tokenize import tabsize 
+import random 
 import numpy as np
 import pandas as pd
 import time
@@ -10,12 +9,6 @@ import time
 from secret_sharing import generateShares, reconstructSecret
 
 from multi_secret_sharing import generate_Participant_Share, generate_Public_Shares
-
-import multiprocessing as mp
-from multiprocessing import Pool
-
-import threading
-from threading import Thread
 
 # ====
 
@@ -86,20 +79,6 @@ def share_list_constant_multiplication(a, value):
     return c
 
 # ====
-
-# 平行化測試：單一程序的單元功能。
-def new_sent_new_share(share, share_a, share_b, share_c, d, e):
-    return [ share[0] , ((share[1] - share_a[1]) * e) + (share_b[1] * d) + (share_a[1] * e) + share_c[1] ]
-
-# 平行化測試：單一 process 的功能部屬。
-def process_1(input):
-    # print(input)
-    # print(input[0])
-    return new_sent_new_share(input[0], input[1], input[2], input[3], input[4], input[5])
-
-# 平行化測試：單一 thread 的單元功能。 [利用 參考方式 (result, index) 處理回傳結果的合併方式。]
-def new_2_sent_new_share(share, share_a, share_b, share_c, d, e, result, index):
-    result[index] = [ share[0] , ((share[1] - share_a[1]) * e) + (share_b[1] * d) + (share_a[1] * e) + share_c[1] ]
 
 class Dealer:
         
@@ -173,7 +152,6 @@ class MSS_system:
         self.server_2 = self.Server_2(self)
         self.RG = self.Randomness_Generator(self, clients)
 
-        self.revert = t
         # self.operation_record = {}      # operation 紀錄
 
     def call_server_1(self):
@@ -215,39 +193,7 @@ class MSS_system:
             new_share_3 = share_list_constant_multiplication( share_a_list, e )
             new_share_4 = share_list_addition( share_list_addition(new_share_1, new_share_2), share_list_addition(new_share_3, share_c_list) )
             return new_share_4[0 : num]
-
-        # 平性化測試：增加 thread 執行序，分散 share 的 計算。(thread 數量 = share 數量)
-        def new_2_sent_new_share(self, i, num, share_a_list, share_b_list, share_c_list, d, e):
-            
-            length = len(self.share[i])
-
-            threads = [None] * length
-            results = [None] * length
-
-            for idx in range(length):
-                threads[idx] = Thread(target = new_2_sent_new_share, args=(self.share[i][idx], share_a_list[idx], share_b_list[idx], share_c_list[idx], d, e, results, idx))
-                threads[idx].start()
-
-            for idx in range(length):
-                threads[idx].join()             # 等待 thread 結束，如果不打 join 程式會直接往下執行
-
-            return results[0 : num]
         
-        # 平性化測試：增加 process 執行序，分散 share 的 計算。(process 數量 = share 數量)
-        def new_sent_new_share(self, i, num, share_a_list, share_b_list, share_c_list, d, e):
-            length = len(self.share[i])
-
-            list_d = [d] * length
-            list_e = [e] * length
-
-            tasks = list(zip(self.share[i], share_a_list, share_b_list, share_c_list, list_d, list_e))
-            
-            pool = Pool(processes = length)
-            
-            result = pool.map(process_1, tasks)        # 平行處理，全部處理完後會將結果存回 result
-            
-            return result[0 : num]
-
         def get_operation_record(self, new_threshold, new_record):
 
             n , k , t = self.MSS.call_global_parameter()
@@ -291,9 +237,6 @@ class MSS_system:
                             print(" , " , key , ":" , operation_record[operation_id][key] , end = ' ')
 
                     print(" , participants threshold:" , t[operation_id])
-
-        def clear_operation_record(self):
-            self.operation_record = {}
         
         def sent_labels(self):
             return self.labels
@@ -302,8 +245,6 @@ class MSS_system:
 
         # MSS Protocols
 
-        # 平行化測試：對於非運算的資料，需要收集多位參與者的 refresh share，故嘗試添加平行化改造。
-        # # 結論：由於還是一台電腦模擬計算，添加平行化會增加更多建立 process 的步驟，反而會降低計算效率。
         def collect_shares(self, participants, i , randomness_index_1 , randomness_index_2):
 
             RG = self.MSS.call_RG()
@@ -330,8 +271,8 @@ class MSS_system:
                 public_num = n + 1 - len(participants)
 
             if i < k:      # 非運算
-                collect_shares_1 = collect_shares_1 + self.new_2_sent_new_share( i, public_num, share_a1[ n : ], share_b1[ n : ], share_c1[ n : ], d1, e1 )
-                collect_shares_2 = collect_shares_2 + server_2.new_2_sent_new_share( i, public_num, share_a2[ n : ], share_b2[ n : ], share_c2[ n : ], d2, e2 )
+                collect_shares_1 = collect_shares_1 + self.sent_new_share( i, public_num, share_a1[ n : ], share_b1[ n : ], share_c1[ n : ], d1, e1 )
+                collect_shares_2 = collect_shares_2 + server_2.sent_new_share( i, public_num, share_a2[ n : ], share_b2[ n : ], share_c2[ n : ], d2, e2 )
             else:               # 運算結果 
                 operation_record = self.operation_record[i]
 
@@ -536,39 +477,7 @@ class MSS_system:
             new_share_3 = share_list_constant_multiplication( share_a_list, e )
             new_share_4 = share_list_addition( share_list_addition(new_share_1, new_share_2), share_list_addition(new_share_3, share_c_list) )
             return new_share_4[0 : num]
-        
-        # 平性化測試：增加 process 執行序，分散 share 的 計算。(process 數量 = share 數量)
-        def new_sent_new_share(self, i, num, share_a_list, share_b_list, share_c_list, d, e):
-            length = len(self.share[i])
 
-            list_d = [d] * length
-            list_e = [e] * length
-
-            tasks = list(zip(self.share[i], share_a_list, share_b_list, share_c_list, list_d, list_e))
-            
-            pool = Pool(processes = length)
-            
-            result = pool.map(process_1, tasks)        # 平行處理，全部處理完後會將結果存回 result
-            
-            return result[0 : num]
-        
-        # 平性化測試：增加 thread 執行序，分散 share 的 計算。(thread 數量 = share 數量)
-        def new_2_sent_new_share(self, i, num, share_a_list, share_b_list, share_c_list, d, e):
-            
-            length = len(self.share[i])
-
-            threads = [None] * length
-            results = [None] * length
-
-            for idx in range(length):
-                threads[idx] = Thread(target = new_2_sent_new_share, args=(self.share[i][idx], share_a_list[idx], share_b_list[idx], share_c_list[idx], d, e, results, idx))
-                threads[idx].start()
-
-            for idx in range(length):
-                threads[idx].join()             # 等待 thread 結束，如果不打 join 程式會直接往下執行
-
-            return results[0 : num]
-    
     # ====
 
     class Randomness_Generator:
@@ -578,7 +487,6 @@ class MSS_system:
             self.clients = clients
             self.randomness_record = {}     # randomness 紀錄
 
-        # 未改造成平行化測試
         def poly_randomness(self, i, num = 1):
 
             n, k, t = self.MSS.call_global_parameter()
@@ -792,9 +700,6 @@ class MSS_system:
                     
                     print()
 
-        def clear_randomness_record(self):
-            self.randomness_record = {}
-
         def scalar_multiplication(self, participants, i, num):
     
             n, k, t = self.MSS.call_global_parameter()
@@ -910,16 +815,7 @@ class MSS_system:
         # print("compare(a > b) =", result)
 
         return result
-    
-    # 結束一階段的運算後，確認不會在用到過去的計算結果，即可將 record 清理乾淨，節省儲存空間。
-    def clear(self):
-        self.update_threshold(self.revert)
-        
-        server_1 = self.call_server_1()
-        server_1.clear_operation_record()
 
-        RG = self.call_RG()
-        RG.clear_randomness_record()
 # ====
 
 if __name__ == '__main__':
@@ -958,8 +854,6 @@ if __name__ == '__main__':
         clients.append(Client(i))
 
     MSS = dealer.distribute(clients)
-
-    t1 = time.time()
 
     print("\n====\n")
 
@@ -1236,7 +1130,3 @@ if __name__ == '__main__':
     # MSS.print_operation_record()
 
     # print("\n====\n")
-
-    t2 = time.time()
-
-    print("Cost time:", t2 - t1)

@@ -1,0 +1,52 @@
+
+
+====
+
+資料集:iris
+Instances: 150 , Attributes: 4 , Class: 3
+Average of epoch =  10
+DCT: 正確率  0.95  耗時  0.0013086795806884766
+KNN: 正確率  0.9633333333333335  耗時  0.003317570686340332
+
+====
+
+資料集:wine
+Instances: 178 , Attributes: 13 , Class: 3
+Average of epoch =  10
+DCT: 正確率  0.9194444444444445  耗時  0.000922083854675293
+KNN: 正確率  0.6611111111111112  耗時  0.0021716833114624025
+
+====
+
+資料集:breast_cancer
+Instances: 569 , Attributes: 30 , Class: 2
+Average of epoch =  10
+DCT: 正確率  0.9228070175438596  耗時  0.005907726287841797
+KNN: 正確率  0.9394736842105263  耗時  0.005892419815063476
+
+====
+
+資料集:digits
+Instances: 1797 , Attributes: 64 , Class: 10
+Average of epoch =  10
+DCT: 正確率  0.8502777777777777  耗時  0.017444849014282227
+KNN: 正確率  0.9863888888888889  耗時  0.024419307708740234
+
+====
+
+資料集:mushroom
+Instances: 8124 , Attributes: 22 , Class: 2
+Average of epoch =  10
+DCT: 正確率  1.0  耗時  0.006061077117919922
+KNN: 正確率  0.9997538461538461  耗時  0.2446657419204712
+
+====
+
+資料集:nursery
+Instances: 12960 , Attributes: 8 , Class: 5
+Average of epoch =  10
+DCT: 正確率  0.9974151234567902  耗時  0.007794761657714843
+KNN: 正確率  0.9672067901234568  耗時  0.5691283941268921
+
+====
+
