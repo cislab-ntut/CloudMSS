@@ -1,0 +1,30 @@
+
+query instance = 10
+epoch = 5
+
+====
+
+# u：參與者數量。
+u = 5
+
+# T：各項 secret 的 threshold。
+T = 3
+
+====
+
+資料集:iris
+Instances: 150 , Attributes: 4 , Class: 3
+
+Epoch:  5  => (Train:  140 , Test:  10 , Test/All:  0.06667 )
+Mode: knn  正確率  100.0 %  耗時  0.0010022640228271485
+Mode: MSS_kNN  正確率  96.0 %  耗時  121.54713368415833 = 2 min
+Mode: dct  正確率  98.0 %  耗時  0.005842828750610351
+
+====
+
+資料集:breast_cancer
+Instances: 569 , Attributes: 30 , Class: 2
+
+MemoryError at 10-th instance
+
+====
