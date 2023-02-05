@@ -8,8 +8,6 @@ global field_size   # field_size = size of coeff's randomness == (random_size)
 field_size = 100
 
 # Mersenne Prime 4th(7) 5th(13) 6th(17) 7th(19) 8th(31) = 127, 8191, 131071, 524287, 2147483647
-L_Min = 2**7 - 1
-L_Max = 2**13 - 1
 PRIME = 2**19 - 1
    
 def computeDelta(s1,s2):
