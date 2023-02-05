@@ -188,6 +188,18 @@ class MSS_system:
             new_share_4 = share_list_addition( share_list_addition(new_share_1, new_share_2), share_list_addition(new_share_3, share_c_list) )
             return new_share_4[0 : num]
         
+        def get_operation_record(self, new_threshold, new_record):
+
+            n , k , t = self.MSS.call_global_parameter()
+
+            operation_index = len(t)
+
+            self.MSS.update_threshold(t + [ new_threshold ])
+
+            self.operation_record[operation_index] = new_record
+
+            return operation_index
+
         def call_operation_record(self , i):
             return self.operation_record[i]
         
@@ -384,27 +396,8 @@ class MSS_system:
             RG = self.MSS.call_RG()
             n , k , t = self.MSS.call_global_parameter()
 
-            """
-            ## 問題：如何產生 l、r1、r2 的 share for 計算的中間值。
-            ## 做法：預設一些公開的計算的 secret [0 - 4] = (-1, 1, x, y, z)，random share generator => l , r1, r2。
-
-            l_share , l = self.random_calculate_share(participants , "l")
-            r1_share , r1 = self.random_calculate_share(participants , "r1")
-            r2_share , r2 = self.random_calculate_share(participants , "r2")
-
-            update_num = 0
-            while not ( (2 * l * r1 + r2) < PRIME ):
-                update_num = update_num + 1
-                update = random.randint(1, 2)
-                if update == 1:
-                    l_share , l = self.random_calculate_share(participants , "l")
-                elif update == 2:
-                    r1_share , r1 = self.random_calculate_share(participants , "r1")
-
-            print("\n - l =" , l , ", r1 =" , r1 , ", r2 =" , r2 , ", update_num =" , update_num)
-            """
-
             l_share , r1_share , r2_share = RG.compare_random_shares(participants)
+            # print("l_share , r1_share , r2_share: ", l_share , r1_share , r2_share)
 
             # =============
 
@@ -414,55 +407,28 @@ class MSS_system:
             operation_index_a_MINUS_b_ADD_l = self.addition(participants, operation_index_a_MINUS_b , l_share)
             # print("a_MINUS_b_ADD_l =", self.reconstruct_Secret(participants, operation_index_a_MINUS_b_ADD_l))
 
-            # m = self.reconstruct_Secret(participants, operation_index_a_MINUS_b_ADD_l)
-            # l = self.reconstruct_Secret(participants, l_share)
+            m = self.reconstruct_Secret(participants, operation_index_a_MINUS_b_ADD_l)
+            l = self.reconstruct_Secret(participants, l_share)
 
             # 使比較的基準對象，從還原的數值l，轉變成 h，不會產生隱私洩漏問題。
             # # 否則，對於知道 差值m 的 資料a或b之擁有者，能輕易推得另一個數字之值。
-            operation_index_z_MUL_r1 = self.multiplication(participants, operation_index_a_MINUS_b_ADD_l , r1_share)
-            operation_index_z_MUL_r1_add_r2 = self.addition(participants, operation_index_z_MUL_r1 , r2_share)
-            # print("z_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_z_MUL_r1))
-            # print("z_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_z_MUL_r1_add_r2))
+            operation_index_m_MUL_r1 = self.multiplication(participants, operation_index_a_MINUS_b_ADD_l , r1_share)
+            operation_index_m_MUL_r1_add_r2 = self.addition(participants, operation_index_m_MUL_r1 , r2_share)
+            # print("m_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_m_MUL_r1))
+            # print("m_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_m_MUL_r1_add_r2))
             
             operation_index_l_MUL_r1 = self.multiplication(participants, l_share , r1_share)
             operation_index_l_MUL_r1_add_r2 = self.addition(participants, operation_index_l_MUL_r1 , r2_share)
             # print("l_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1))
             # print("l_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2))
 
-            s = self.reconstruct_Secret(participants, operation_index_z_MUL_r1_add_r2)
+            s = self.reconstruct_Secret(participants, operation_index_m_MUL_r1_add_r2)
             h = self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2)
 
+            # print("s:" , s)
+            # print("h:" , h)
+
             return s > h
-    
-        """
-        def random_calculate_share(self, participants, target):
-
-            temp_index = 1
-            temp_num = 1
-
-            if target == "l":
-                # L的最小值，必需比資料最大值(包括計算後)來的大。
-                min_range = random.randint(2000, 4000)
-            else:
-                min_range = random.randint(5, 50)
-                
-            while temp_num < min_range:
-                
-                num = random.randint(1, 4)
-                op = random.randint(1, 2)
-
-                if op == 1:
-                    operation_index = self.addition(participants, temp_index , num)
-                    temp_num = temp_num + self.reconstruct_Secret(participants, num)
-                elif op == 2:
-                    operation_index = self.multiplication(participants, temp_index , num)
-                    temp_num = temp_num * self.reconstruct_Secret(participants, num)
-                
-                temp_index = operation_index
-                temp_num = temp_num % PRIME
-
-            return temp_index , temp_num
-        """
 
         def reconstruct_Secret(self, participants, i):
 
@@ -512,17 +478,22 @@ class MSS_system:
             self.clients = clients
             self.randomness_record = {}     # randomness 紀錄
 
-        def poly_randomness(self, i):
+        def poly_randomness(self, i, num = 1):
 
             n, k, t = self.MSS.call_global_parameter()
 
             # ====
 
+            num = num % PRIME
+
             r = np.random.randint(1, random_size)
             # print('r:' , r)
 
-            share_r1 = generateShares(2 * n + 1 - t[i] , t[i] , r)
-            share_r2 = generateShares(2 * n + 1 - t[i] , t[i] , r)
+            r1 = r % PRIME
+            r2 = (r * num) % PRIME
+
+            share_r1 = generateShares(2 * n + 1 - t[i] , t[i] , r1)
+            share_r2 = generateShares(2 * n + 1 - t[i] , t[i] , r2)
 
             # ====
 
@@ -720,67 +691,71 @@ class MSS_system:
                     
                     print()
 
+        def scalar_multiplication(self, participants, i, num):
+    
+            n, k, t = self.MSS.call_global_parameter()
+            
+            server_1 = self.MSS.call_server_1()
+
+            # ====
+
+            ## scalar 的計算結果只能在正數計算，否則還原結果將出錯。
+            #  因此，當需要負數的倍數時，請先 scalar 正數，再 multiplication -1。
+
+            scalar_index_1, scalar_index_2 = self.poly_randomness(1, num)
+
+            collect_shares_a_1 , collect_shares_a_2 = server_1.collect_shares(participants , 1 , scalar_index_1, scalar_index_2)
+
+            pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
+
+            b_randomness_index_1, b_randomness_index_2 = self.poly_randomness(i)
+            
+            collect_shares_b_1 , collect_shares_b_2 = server_1.collect_shares(participants , i , b_randomness_index_1, b_randomness_index_2)
+
+            pseudo_secret_b_2 = reconstructSecret(collect_shares_b_2)
+
+            # ==== 
+
+            operation_threshold = max(t[1] , t[i])
+
+            operation_record = {
+                "info (scalar operation index)": str(num) + " * "+ str(i),
+                "operation": "*",
+                "operand_a": (1 , scalar_index_1, scalar_index_2),
+                "operand_b": (i , b_randomness_index_1 , b_randomness_index_2),
+                "pseudo_secret_a_1": pseudo_secret_a_1,
+                "pseudo_secret_b_2": pseudo_secret_b_2,
+                "participants": participants
+            }
+
+            operation_index = server_1.get_operation_record(operation_threshold, operation_record)
+
+            return operation_index
+        
         def compare_random_shares(self, participants):
 
             ## 問題：如何產生 l、r1、r2 的 share for 計算的中間值。
-            ## 做法：預設一些公開的計算的 secret [0 - 4] = (-1, 1, x, y, z)，random share generator => l , r1, r2。
+            ## 做法：預設一些公開的計算用 secret (0 , 1)，self.scalar_multiplication => l , r1, r2。
 
-            # Basic secret 最大值 = 5。
-            r2_range = random.randint(10, 20)
-            r2_share , r2 = self.random_calculate_share(participants , r2_range, "none")
-
-            r1_range = random.randint(10, 20)
-            r1_share , r1 = self.random_calculate_share(participants , r1_range, "add")
-
-            update_1_num = 0
-            update_2_num = 0
+            r2 = random.randint(1, random_size)
+            r1 = random.randint(1, 50)
 
             # 2lr + r' < PRIME
             L_max = round(((PRIME - r2) / r1) / 2)
-            offset = 500
-            while L_max < L_Min + offset:
-                r1_share , r1 = self.random_calculate_share(participants , r1_range, "add")
-                L_max = round(((PRIME - r2) / r1) / 2)
-                update_1_num = update_1_num + 1
+            l = random.randint(L_Min, L_max)
 
-            l_range = random.randint(L_Min, L_max)
-            l_share , l = self.random_calculate_share(participants , l_range, "mul")
+            # print()
+            # print("l =" , l , ", r1 =" , r1 , ", r2 =" , r2)
 
-            while L_max < l:
-                l_share , l = self.random_calculate_share(participants , l_range, "mul")
-                update_2_num = update_2_num + 1
-                
-            print("\n - l =" , l , ", r1 =" , r1 , ", r2 =" , r2 , ", update_1_num =" , update_1_num , ", update_2_num =" , update_2_num)
+            server_1 = self.MSS.call_server_1()
 
-            return l_share , r1_share , r2_share
+            l_index = self.scalar_multiplication(participants, 1 , l)
+            r1_index = self.scalar_multiplication(participants, 1 , r1)
+            r2_index = self.scalar_multiplication(participants, 1 , r2)
 
-        def random_calculate_share(self, participants, min_range, mode):
+            # print("l_index , r1_index , r2_index:", l_index , r1_index , r2_index)
 
-            temp_index = 1
-            temp_num = 1
-            
-            while temp_num < min_range:
-                
-                num = random.randint(1, 4)
-
-                if mode == "add":
-                    op = random.choices([1 , 2], weights = [2, 1], k = 1) [0]
-                elif mode == "mul":
-                    op = random.choices([1 , 2], weights = [1, 2], k = 1) [0]
-                else:
-                    op = random.choices([1 , 2], weights = [1, 1], k = 1) [0]
-                
-                if op == 1:
-                    operation_index = self.MSS.addition(participants, temp_index , num)
-                    temp_num = temp_num + self.MSS.reconstruct_Secret(participants, num)
-                elif op == 2:
-                    operation_index = self.MSS.multiplication(participants, temp_index , num)
-                    temp_num = temp_num * self.MSS.reconstruct_Secret(participants, num)
-                
-                temp_index = operation_index
-                temp_num = temp_num % PRIME
-
-            return temp_index , temp_num
+            return l_index , r1_index , r2_index
 
     # ====
 
@@ -814,6 +789,12 @@ class MSS_system:
 
         return operation_index
 
+    def scalar_multiplication(self, participants, i, num):
+    
+        operation_index = self.RG.scalar_multiplication(participants, i, num)
+
+        return operation_index
+
     def compare(self, participants, a, b):
         
         result = self.server_1.compare(participants, a, b)
@@ -841,8 +822,8 @@ if __name__ == '__main__':
     t = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4]          # n = 10；threshold 固定 (以求便於計算，可設置成非固定)。
 
     # Basic numbers
-    B_K = [PRIME-1, 1, 2, 3, 5, 0]
-    B_t = [1, 1, 1, 1, 1, 1]
+    B_K = [ PRIME-1 , 1 ]
+    B_t = [ 1 , 1 ]
 
     K = B_K + K
     t = B_t + t
@@ -1005,10 +986,113 @@ if __name__ == '__main__':
 
     print("\n====\n")
 
+    i , j = (b_k + 3) , (b_k + 2)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    i , j = (b_k + 3) , (operation_index_1)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    i , j = (operation_index_1) , (operation_index_2)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    i , j = (b_k + 2) , (b_k + 3)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    i , j = (operation_index_1) , (b_k + 3)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    i , j = (operation_index_2) , (operation_index_1)
+
+    operation_index = MSS.minus(pool, i , j)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret minus:" , MSS.reconstruct_Secret(pool, i) , "-" , MSS.reconstruct_Secret(pool, j))
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    print("\n====\n")
+
+    scalar_error = 0
+    
+    '''
+    for test in range(100):
+
+        i = 0
+        num = random.randint(1 , PRIME-1)
+
+        ## scalar 的計算結果只能在正數計算，否則還原結果將出錯。
+        #  因此，當需要負數的倍數時，請先 scalar 正數，再 multiplication -1。
+
+        operation_index = MSS.scalar_multiplication(pool, i , num)
+
+        reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+    
+        if(reconstruct != ((num * -1) % PRIME)):
+            scalar_error = scalar_error + 1
+            print("[ERROR] Secret Scalar：" , "num = " + str(((num * -1) % PRIME)) , ", result = " , reconstruct)
+    '''
+
+    num = PRIME+2
+    operation_index = MSS.scalar_multiplication(pool, 1 , num)
+    reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+
+    print("Secret scalar: secret =" , MSS.reconstruct_Secret(pool, 1) , ", num =" , num % PRIME)
+    print("Reconstructed secret:", reconstruct)
+    print()
+
+    for test in range(1000):
+    
+        i = 1
+        num = random.randint(1 , PRIME-1)
+
+        operation_index = MSS.scalar_multiplication(pool, i , num)
+
+        reconstruct = MSS.reconstruct_Secret(pool, operation_index)
+    
+        if(reconstruct != num):
+            scalar_error = scalar_error + 1
+            print("[ERROR] Secret Scalar：" , "num = - " + str(num) , ", result = " , reconstruct)
+    
+    if (scalar_error == 0):
+        print("Scalar Test: All success.")
+    else:
+        print("\nScalar Test: There is " + str(scalar_error) + " error exist.")
+
+    print("\n====\n")
+
     compare_error = 0
 
-    echo = 10000
-    echo = 100
+    echo = 1000
 
     for test in range(echo):
 
@@ -1026,5 +1110,8 @@ if __name__ == '__main__':
     else:
         print("\nCompare Test: There is " + str(compare_error) + " error exist.")
 
+    print("\n====\n")
+    
+    # MSS.print_operation_record()
 
     print("\n====\n")
