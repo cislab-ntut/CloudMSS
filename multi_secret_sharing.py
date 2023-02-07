@@ -89,7 +89,7 @@ def generate_Public_Shares(Participant_Share, secret, threshold):
                 
                 sum_1 = sum_1 + (Participant_Share[j-1][1] * pi_2)
             
-            result = secret[i] * pi_1 + sum_1
+            result = (secret[i] * pi_1) % PRIME + (sum_1 % PRIME)
 
             secret_public_share.append([ x , result % PRIME ])
     
