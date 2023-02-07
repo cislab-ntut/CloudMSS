@@ -1,7 +1,8 @@
 from ast import Or
 from asyncio.windows_events import NULL
 
-import random 
+import random
+from tokenize import tabsize 
 import numpy as np
 import pandas as pd
 import time
@@ -152,6 +153,7 @@ class MSS_system:
         self.server_2 = self.Server_2(self)
         self.RG = self.Randomness_Generator(self, clients)
 
+        self.revert = t
         # self.operation_record = {}      # operation 紀錄
 
     def call_server_1(self):
@@ -237,6 +239,9 @@ class MSS_system:
                             print(" , " , key , ":" , operation_record[operation_id][key] , end = ' ')
 
                     print(" , participants threshold:" , t[operation_id])
+
+        def clear_operation_record(self):
+            self.operation_record = {}
         
         def sent_labels(self):
             return self.labels
@@ -430,6 +435,13 @@ class MSS_system:
             operation_index_l_MUL_r1_add_r2 = self.addition(participants, operation_index_l_MUL_r1 , r2_share)
             # print("l_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1))
             # print("l_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2))
+
+            """
+            此處，r1 , r2 是為 原始秘密 增加 隨機值，以免 比較運算的還原值 洩漏 原始秘密之間的關聯性。
+            => r1 = 隨機倍化，r2 = 隨機常數 -> 將他們做成 share，再用 MSS multiplication 和 MSS addition 改變 秘密內容。
+            ==> 此處，若是 r1 能透過 scalar_multiplication 直接對 server 2 的資料進行倍化，有機會省去 MSS multiplication 的計算。
+                但是，對於 執行 compare 的角色來說，r1 極有可能需要是明文，因此這個優化提議可能有問題。
+            """
 
             s = self.reconstruct_Secret(participants, operation_index_m_MUL_r1_add_r2)
             h = self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2)
@@ -700,6 +712,9 @@ class MSS_system:
                     
                     print()
 
+        def clear_randomness_record(self):
+            self.randomness_record = {}
+
         def scalar_multiplication(self, participants, i, num):
     
             n, k, t = self.MSS.call_global_parameter()
@@ -815,7 +830,16 @@ class MSS_system:
         # print("compare(a > b) =", result)
 
         return result
+    
+    # 結束一階段的運算後，確認不會在用到過去的計算結果，即可將 record 清理乾淨，節省儲存空間。
+    def clear(self):
+        self.update_threshold(self.revert)
+        
+        server_1 = self.call_server_1()
+        server_1.clear_operation_record()
 
+        RG = self.call_RG()
+        RG.clear_randomness_record()
 # ====
 
 if __name__ == '__main__':

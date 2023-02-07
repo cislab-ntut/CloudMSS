@@ -168,8 +168,8 @@ def reconstructSecret(shares):
                 # 拉格朗日插值多項式，即為用share所構造出得方程式，將 x 代入 0 相當於於求出常數項，也就是直接得出secret值的結果。
                 prod = prod * _divmod( xm , ( xm - xj ) , PRIME )
 
-        prod = prod * yj
-        sums = sums + prod
+        prod = (prod * yj) % PRIME
+        sums = (sums) % PRIME + (prod) % PRIME
 
     # reconstruct = sums
     reconstruct = round( sums , 1 ) % PRIME
