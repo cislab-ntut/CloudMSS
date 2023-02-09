@@ -40,18 +40,22 @@ random_size = 100
 
 # # MSS_case：[ (u,T) ]
 # MSS_case = [ (2,2) ]
+# MSS_case = [ 
+#     (2,2) , 
+#     (4,2) , (4,3) , (4,4) , 
+#     (5,2) , (5,3) , (5,4) , (5,5) ,
+#     (6,2) , (6,3) , (6,4) , (6,5) , (6,6)
+# ]
 MSS_case = [ 
-    (2,2) , 
-    (4,2) , (4,3) , (4,4) , 
-    (5,2) , (5,3) , (5,4) , (5,5) ,
-    (6,2) , (6,3) , (6,4) , (6,5) , (6,6)
+    (2,2) , (4,2) , (6,2) , (6,4) , (6,6)
 ]
 
 
 # # Basic numbers：協助運算的已知 secret。
-B_K = [ PRIME-1 , 1 ]
-B_t = [ 1 , 1 ]
+B_K = [ 1 ]
+B_t = [ 1 ]
 b_k = len(B_K)
+basic_number_one_index = 0
 
 # =======
 
@@ -103,7 +107,7 @@ def MSS_kNN(MSS, participant, n_row, n_column, test_X, n_neighbors):
         query_share_index = []
         
         for j in range(test_X.shape[1]):
-            query_share_index.append(MSS.scalar_multiplication(participant, 1 , test_X[i][j]))
+            query_share_index.append(MSS.scalar_multiplication(participant, basic_number_one_index , test_X[i][j]))
 
         # STEP2 計算 dataset instance 與 此 query instance 的距離。
         distance = []
@@ -127,7 +131,7 @@ def MSS_kNN(MSS, participant, n_row, n_column, test_X, n_neighbors):
                     difference = MSS.minus(participant, q_attribute_index , d_attribute_index)
 
                 # STEP3 計算距離
-                delta = MSS.reconstruct_Secret(participant, difference)
+                delta = MSS.reconstruct_MSS_Secret(participant, difference)
 
                 # print("c:", c , "compare:", comp , "delta:", delta)
 
@@ -215,8 +219,8 @@ def run_code(dataset):
     print('Instances: {} , Attributes: {} , Class: {} => Total: {}' .format( len(label) , len(data[0]) , NUM_CLASS , (len(label) * len(data[0])) ) , file=open('application_1__log.txt', 'a+'))
 
 
-    epoch=1
-    # epoch=10
+    epoch=10
+    # epoch=1
     # epoch=5
 
     # 每一種 mode 存放一組資料 [ mode_i , case , total_accuracy = 0 , total_time_cost = 0 ]
@@ -235,12 +239,12 @@ def run_code(dataset):
         
         print('\n==== epoch e:', e , "====")
 
-        # n_query = 1
-        # n_query = 10
+        n_query = 10
+        # n_query = 1        
         
         # 切分訓練與測試資料
-        # test_scale = n_query / len(data)
-        test_scale = 0.1
+        test_scale = n_query / len(data)
+        # test_scale = 0.1
         train_X, test_X, train_y, test_y = train_test_split(data, label, test_size = test_scale)
         # train_X, test_X, train_y, test_y = train_test_split(data, label, test_size = 0.03)
 
@@ -316,10 +320,8 @@ if __name__ == '__main__':
     # dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']  # sort by total number
     """
 
-    # dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']  # sort by total number
-    dataName = ['iris' , 'Bankruptcy' , 'breast_cancer' , 'tic-tac-toe' , 'banknote' , 'car']  # sort by instance number
-    # dataName = ['breast_cancer' , 'tic-tac-toe' , 'banknote' , 'car']
-    # dataName = ['Bankruptcy']
+    dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']  # sort by total number
+    dataName = ['iris']
 
     if(isinstance(dataName, list)):
         while(len(dataName) > 0):

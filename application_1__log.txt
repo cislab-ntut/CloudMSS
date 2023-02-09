@@ -1,0 +1,32 @@
+
+
+===========
+
+資料集:car
+Instances: 1728 , Attributes: 6 , Class: 4 => Total: 10368
+
+Epoch:  10  => (Train:  1718 , Test:  10 , Test/All:  0.00579 )
+Mode: knn      	 Case: None 	 正確率: 98.0 % 	 耗時: 0.0018868446350097656
+Mode: dct      	 Case: None 	 正確率: 99.0 % 	 耗時: 0.001337122917175293
+Mode: MSS_kNN  	 Case: (2, 2) 	 正確率: 99.0 % 	 耗時: 1091.932049202919
+Mode: MSS_kNN  	 Case: (4, 2) 	 正確率: 99.0 % 	 耗時: 2092.710607767105
+Mode: MSS_kNN  	 Case: (6, 2) 	 正確率: 99.0 % 	 耗時: 3744.5810544013975
+Mode: MSS_kNN  	 Case: (6, 4) 	 正確率: 99.0 % 	 耗時: 3675.813367462158
+Mode: MSS_kNN  	 Case: (6, 6) 	 正確率: 99.0 % 	 耗時: 3583.021878528595
+
+===========
+
+資料集:breast_cancer
+Instances: 569 , Attributes: 30 , Class: 2 => Total: 17070
+
+Epoch:  10  => (Train:  559 , Test:  10 , Test/All:  0.01757 )
+Mode: knn      	 Case: None 	 正確率: 93.0 % 	 耗時: 0.001808309555053711
+Mode: dct      	 Case: None 	 正確率: 95.0 % 	 耗時: 0.006652235984802246
+Mode: MSS_kNN  	 Case: (2, 2) 	 正確率: 94.0 % 	 耗時: 2067.7960641622544
+Mode: MSS_kNN  	 Case: (4, 2) 	 正確率: 94.0 % 	 耗時: 3688.9246839284897
+Mode: MSS_kNN  	 Case: (6, 2) 	 正確率: 94.0 % 	 耗時: 6411.448307204247
+Mode: MSS_kNN  	 Case: (6, 4) 	 正確率: 94.0 % 	 耗時: 6304.07366309166
+Mode: MSS_kNN  	 Case: (6, 6) 	 正確率: 94.0 % 	 耗時: 6148.930614113808
+
+===========
+
