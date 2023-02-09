@@ -79,6 +79,77 @@ def share_list_constant_multiplication(a, value):
         c.append([ a[i][0], (a[i][1] * value) % PRIME ])
     return c
 
+def SS_multiply(share_x , share_y, n, t):
+    
+    a = np.random.randint(100)
+    b = np.random.randint(100)
+    c = a * b
+
+    share_a = generateShares(2 * n + 1 - t, t, a)
+    share_b = generateShares(2 * n + 1 - t, t, b)
+    share_c = generateShares(2 * n + 1 - t, t, c)
+
+    share_d = share_list_minus(share_x, share_a)
+    share_e = share_list_minus(share_y, share_b)
+
+    d = reconstructSecret(share_d) % PRIME
+    e = reconstructSecret(share_e) % PRIME
+
+    # xy = d * e + share_list_constant_multiplication(share_b, d) + share_list_constant_multiplication(share_a, e) + share_c
+    de = share_list_constant_multiplication(share_e, d)
+    bd = share_list_constant_multiplication(share_b, d)
+    ae = share_list_constant_multiplication(share_a, e)
+    de_bd = share_list_addition(de, bd)
+    ae_c = share_list_addition(ae, share_c)
+
+    xy = share_list_addition(de_bd, ae_c)
+    
+    return xy
+
+def SS_compare(a_share, b_share, n, t):
+
+    r2 = random.randint(1, random_size)
+    r1 = random.randint(1, 50)
+
+    # 2lr + r' < PRIME
+    L_max = round(((PRIME - r2) / r1) / 2)
+    l = random.randint(L_Min, L_max)
+
+    l_share = generateShares(2 * n + 1 - t, t, l)
+    r1_share = generateShares(2 * n + 1 - t, t, r1)
+    r2_share = generateShares(2 * n + 1 - t, t, r2)
+
+    # =============
+
+    a_MINUS_b = share_list_minus(a_share , b_share)
+    
+    a_MINUS_b_ADD_l = share_list_addition(a_MINUS_b , l_share)
+    
+    m = reconstructSecret(a_MINUS_b_ADD_l)
+
+    # 使比較的基準對象，從還原的數值l，轉變成 h，不會產生隱私洩漏問題。
+    # # 否則，對於知道 差值m 的 資料a或b之擁有者，能輕易推得另一個數字之值。
+    m_MUL_r1 = SS_multiply(a_MINUS_b_ADD_l , r1_share, n, t)
+    m_MUL_r1_add_r2 = share_list_addition(m_MUL_r1 , r2_share)
+    
+    l_MUL_r1 = SS_multiply(l_share , r1_share, n, t)
+    l_MUL_r1_add_r2 = share_list_addition(l_MUL_r1 , r2_share)
+
+    print("l:" , l)
+    print("a_MINUS_b:" , reconstructSecret(a_MINUS_b))
+    print("m:" , m)
+    print("r1:" , r1)
+    print("m_MUL_r1:" , reconstructSecret(m_MUL_r1))
+    print("l_MUL_r1:" , reconstructSecret(l_MUL_r1))
+    
+    s = reconstructSecret(m_MUL_r1_add_r2)
+    h = reconstructSecret(l_MUL_r1_add_r2)
+
+    # print("s:" , s)
+    # print("h:" , h)
+
+    return s > h
+
 # ====
 
 class Dealer:
@@ -410,46 +481,34 @@ class MSS_system:
             RG = self.MSS.call_RG()
             n , k , t = self.MSS.call_global_parameter()
 
-            l_share , r1_share , r2_share = RG.compare_random_shares(participants)
-            # print("l_share , r1_share , r2_share: ", l_share , r1_share , r2_share)
+            a_randomness_index_1, a_randomness_index_2 = RG.poly_randomness(a)
 
-            # =============
+            collect_shares_a_1 , collect_shares_a_2 = self.collect_shares(participants , a , a_randomness_index_1, a_randomness_index_2)
 
-            operation_index_a_MINUS_b = self.minus(participants, a , b)
-            # print("a_MINUS_b =", self.reconstruct_Secret(participants, operation_index_a_MINUS_b))
+            pseudo_secret_a_1 = reconstructSecret(collect_shares_a_1)
 
-            operation_index_a_MINUS_b_ADD_l = self.addition(participants, operation_index_a_MINUS_b , l_share)
-            # print("a_MINUS_b_ADD_l =", self.reconstruct_Secret(participants, operation_index_a_MINUS_b_ADD_l))
-
-            m = self.reconstruct_Secret(participants, operation_index_a_MINUS_b_ADD_l)
-            l = self.reconstruct_Secret(participants, l_share)
-
-            # 使比較的基準對象，從還原的數值l，轉變成 h，不會產生隱私洩漏問題。
-            # # 否則，對於知道 差值m 的 資料a或b之擁有者，能輕易推得另一個數字之值。
-            operation_index_m_MUL_r1 = self.multiplication(participants, operation_index_a_MINUS_b_ADD_l , r1_share)
-            operation_index_m_MUL_r1_add_r2 = self.addition(participants, operation_index_m_MUL_r1 , r2_share)
-            # print("m_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_m_MUL_r1))
-            # print("m_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_m_MUL_r1_add_r2))
+            b_randomness_index_1, b_randomness_index_2 = RG.poly_randomness(b)
             
-            operation_index_l_MUL_r1 = self.multiplication(participants, l_share , r1_share)
-            operation_index_l_MUL_r1_add_r2 = self.addition(participants, operation_index_l_MUL_r1 , r2_share)
-            # print("l_MUL_r1 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1))
-            # print("l_MUL_r1_add_r2 =", self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2))
+            collect_shares_b_1 , collect_shares_b_2 = self.collect_shares(participants , b , b_randomness_index_1, b_randomness_index_2)
 
-            """
-            此處，r1 , r2 是為 原始秘密 增加 隨機值，以免 比較運算的還原值 洩漏 原始秘密之間的關聯性。
-            => r1 = 隨機倍化，r2 = 隨機常數 -> 將他們做成 share，再用 MSS multiplication 和 MSS addition 改變 秘密內容。
-            ==> 此處，若是 r1 能透過 scalar_multiplication 直接對 server 2 的資料進行倍化，有機會省去 MSS multiplication 的計算。
-                但是，對於 執行 compare 的角色來說，r1 極有可能需要是明文，因此這個優化提議可能有問題。
-            """
+            pseudo_secret_b_1 = reconstructSecret(collect_shares_b_1)
 
-            s = self.reconstruct_Secret(participants, operation_index_m_MUL_r1_add_r2)
-            h = self.reconstruct_Secret(participants, operation_index_l_MUL_r1_add_r2)
+            print("input a =", pseudo_secret_a_1, reconstructSecret(collect_shares_a_2))
+            print("input b =", pseudo_secret_b_1, reconstructSecret(collect_shares_b_2))
 
-            # print("s:" , s)
-            # print("h:" , h)
+            # ==== 
 
-            return s > h
+            a_shares = share_list_constant_multiplication(collect_shares_a_2, pseudo_secret_b_1)
+            b_shares = share_list_constant_multiplication(collect_shares_b_2, pseudo_secret_a_1)
+
+            print("abx =", reconstructSecret(a_shares))
+            print("aby =", reconstructSecret(b_shares))
+
+            compare_threshold = max(t[a] , t[b])
+            
+            result = SS_compare(a_shares, b_shares, n, compare_threshold)
+
+            return result
 
         def reconstruct_Secret(self, participants, i):
 
@@ -757,31 +816,6 @@ class MSS_system:
             operation_index = server_1.get_operation_record(operation_threshold, operation_record)
 
             return operation_index
-        
-        def compare_random_shares(self, participants):
-
-            ## 問題：如何產生 l、r1、r2 的 share for 計算的中間值。
-            ## 做法：預設一些公開的計算用 secret (0 , 1)，self.scalar_multiplication => l , r1, r2。
-
-            r2 = random.randint(1, random_size)
-            r1 = random.randint(1, 50)
-
-            # 2lr + r' < PRIME
-            L_max = round(((PRIME - r2) / r1) / 2)
-            l = random.randint(L_Min, L_max)
-
-            # print()
-            # print("l =" , l , ", r1 =" , r1 , ", r2 =" , r2)
-
-            server_1 = self.MSS.call_server_1()
-
-            l_index = self.scalar_multiplication(participants, 1 , l)
-            r1_index = self.scalar_multiplication(participants, 1 , r1)
-            r2_index = self.scalar_multiplication(participants, 1 , r2)
-
-            # print("l_index , r1_index , r2_index:", l_index , r1_index , r2_index)
-
-            return l_index , r1_index , r2_index
 
     # ====
 
@@ -824,10 +858,6 @@ class MSS_system:
     def compare(self, participants, a, b):
         
         result = self.server_1.compare(participants, a, b)
-
-        # print("a =", self.reconstruct_Secret(participants, a))
-        # print("b =", self.reconstruct_Secret(participants, b))
-        # print("compare(a > b) =", result)
 
         return result
     
@@ -1131,7 +1161,7 @@ if __name__ == '__main__':
 
     compare_error = 0
 
-    echo = 100
+    echo = 1
 
     for test in range(echo):
 
