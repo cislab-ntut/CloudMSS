@@ -63,7 +63,7 @@
 | MSS.minus() | 以 Server_1 主導，兩秘密的減法計算。 | |
 | MSS.compare() | 以 Server_1 主導，兩秘密的安全比較。 | |
 | MSS.scalar_multiplication() | 由 Randomness_Generator 主導，對 mask 或 masked data 進行純量乘法。 | ( 可用於上傳查詢資料、刷新 MSS 共享。 ) |
-| MSS.collect_shares() | 模擬各方傳遞 share 給 (參與者)。 | <ul><li>collect_shares_1：用來重建 mask 的明文，收集來自 Server_1 和 clients 的共享。</li><li>collect_shares_2：用來重建 masked data 的明文，收集來自 Server_2 和 clients 的共享。</li></ul> |
+| MSS.collect_shares() | 模擬各方傳輸，集中共享。 | <ul><li>collect_shares_1：用來重建 mask 的明文，收集來自 Server_1 和 clients 的共享。</li><li>collect_shares_2：用來重建 masked data 的明文，收集來自 Server_2 和 clients 的共享。</li></ul> |
 | MSS.reconstruct_MSS_Secret() | 取得足夠多的共享，還原 secret。 | 以 MSS.collect_shares() 收集各方手上的共享，當數量滿足門檻值，即可還原 mask 和 masked data，用來重建 secret 的明文。 |
 | MSS.print_operation_record() | 展示 Server_1 儲存的所有計算操作參數。 | ( 這些參數是全部角色都可知的，尤其是 MSS.collect_shares() 會需要各方利用這些參數在本地計算出要調用的資料。 ) |
 | MSS.clear() | 清理 Server_1 和 Randomness_Generator 的 operation_record 和 randomness_record。 | ( 結束一個階段的運算後，確認不會再用到過去的計算結果，即可將 record 清理乾淨，節省儲存空間。 ) |
@@ -72,7 +72,7 @@
 
 > 在這個項目中【application_1.py】是應用 MSS 系統所開發的範例程式。
 > 
-> 其中，MSS_system_init 可供參考。
+> 其中，MSS_system_init() 可供參考。
 
 - step 1. 建立 Dealer。
 
@@ -132,7 +132,7 @@
 
     - 用戶們可以控管資料的使用權，以分散式管理的做法，避免信任度不足的攻擊者，擁有獲得服務的權限。
 
-- 本專案之目的為收集相關實驗數據，著重於評估基於我們的工作所建立的安全服務，對不同的設定配置所產生的影響。
+- 本專案之目的為收集相關實驗數據，著重於評估基於我們的工作所建立的安全服務，其對不同的設定配置所產生的影響。
 
     - 實驗參數配置方案如下所示：(參與者數量, 門檻值)
         
@@ -165,15 +165,15 @@ application_1.py 的運行順序：\_\_main\_\_ -> run_code() -> run_epoch()。
         
         - 每一輪都會重新劃分資料集，但同一輪中的各種 mode 都會以相同的訓練集和測試集，來執行 run_epoch()。
             
-            - test_scale = n_query / len(data)
+            ~~~
+            test_scale = n_query / len(data)
             
-            - train_X, test_X, train_y, test_y = train_test_split(data, label, test_size = test_scale)
-        
-        - 建議：以 my_datasets.py 檢查改動後分類效果是否在可接受範圍。
+            train_X, test_X, train_y, test_y = train_test_split(data, label, test_size = test_scale)
+            ~~~
       
 3. run_epoch()：依照上述設定，執行實驗。
 
-    - MSS_kNN()：參數 n_neighbors 可修改，此實驗預設值為 5。
+    - MSS_kNN()：參數 n_neighbors 可修改 k 值，此實驗預設值為 5。
 
 ### 實驗結果
 
@@ -317,8 +317,24 @@ Mode: MSS_kNN  	 Case: (6, 6) 	 正確率: 94.0 % 	 耗時: 6148.930614113808
 
     - goal：由 Server 主導安全計算工作。
         
-    - done：當 dual server 讓 public shares 不集中在單一角色中，加上 randomization 也使 share 只能用於本輪計算工作，可以確保我們建構的系統能使用 server 來完成安全計算。
+    - done：
+
+        - 確保使用 server 計算的安全性。
+
+            (1) dual server 讓 public shares 不集中在單一角色中。
         
+            (2) randomization 使 share 只能用於本輪計算工作。
+        
+        - 建構持續計算機制，避免讓參與者維護這些計算結果共享。
+            
+            ~~~
+            將"計算過程"以參數方式儲存到 Record，並在調用時重建計算結果。
+
+            - randomness_record：紀錄隨機化參數。
+
+            - operation_record：紀錄運算參數。
+            ~~~
+
     - problem：增加 secure comparison 的功能。
 
 4. Comparison protocol with random_calculate_share
@@ -365,13 +381,13 @@ Mode: MSS_kNN  	 Case: (6, 6) 	 正確率: 94.0 % 	 耗時: 6148.930614113808
 
         (1) 每一筆 query data 的查詢，都是對整個 dataset 的所有資料重新進行距離計算。分類出一筆 query data 後，舊的計算結果不會再影響到下一筆資料的分類過程，所以可以透過 clear reocrd 增加記憶體空間。
         
-        - (2) 成功，完成對大型資料集的 MSS_kNN 進行實驗。
+        (2) 成功，完成對大型資料集的 MSS_kNN 進行實驗。
         
     - problem：
 
-        - (1) 利用 secret sharing 的 secure comparison 調適成 MSS secure comparison 出錯。
+        (1) 利用 secret sharing 的 secure comparison 調適成 MSS secure comparison 出錯。
         
-        - (2) Randomness Generator 可能有潛在安全漏洞。
+        (2) Randomness Generator 可能有潛在安全漏洞。
 
 9. Fail comparison version
 
@@ -379,7 +395,7 @@ Mode: MSS_kNN  	 Case: (6, 6) 	 正確率: 94.0 % 	 耗時: 6148.930614113808
        
         - 上一版做法：以 MSS 計算，置換 secret sharing 的 Secure comparison 計算。
        
-        - 簡化想法：參考 MSS addition，將兩個 secret 轉換成相同的 mask 下，再用一般的 Secure comparison 進行比較。
+        - 簡化做法：參考 MSS addition，將兩個 secret 轉換成相同的 mask 下，再用一般的 Secure comparison 進行比較。
 
     - problem：
         
