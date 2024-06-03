@@ -2,6 +2,11 @@
 
 > This is an experiment based on the research of "Dual-Cloud Multi-Secret Sharing Architecture for Privacy Preserving Persistent Computation".
 
+## Instruction (English)
+
+Here!
+
+
 ## 介紹
 
 本研究旨在開發多私密分享的計算工具，以實現高效的多方安全計算技術為目標，從而拓展資源受限設備上的應用場域。
