@@ -12,7 +12,7 @@
 
 3. In line 324, you can set `dataName`, which decides the datasets for the experiment.
  
-	(In line 323, you can see the default dataset options provided by this system.)
+	- In line 323, you can see the default dataset options provided by this system.
 
 4. Finally, run the code with `python -u "...\CloudMSS\application_1.py"`.
 
