@@ -4,8 +4,17 @@
 
 ## Instruction (English)
 
-Here!
+0. Open this project and get into the `application.py`.
 
+1. In lines 49-51, you can set the `MSS_case`, which assigns the (user, threshold) cases that run in each epoch.
+
+2. In line 222, you can set `epoch`, which gives the repeat rounds and calculate the average results.
+
+3. In line 324, you can set `dataName`, which decides the datasets for the experiment.
+ 
+	(In line 323, you can see the default dataset options provided by this system.)
+
+4. Finally, run the code with `python -u "...\CloudMSS\application_1.py"`.
 
 ## 介紹
 
