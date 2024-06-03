@@ -18,7 +18,6 @@
 
     - 投影片：[Master Thesis - CloudMSS ( Oral presentations Slides )](./assets/documents/Master%20Thesis%20-%20CloudMSS%20(%20Oral%20presentations%20Slides%20).pptx)
 
-- 投稿中 ( Journal IEEE TIFS )：[Dual-Cloud Multi-Secret Sharing Architecture for Privacy Preserving Persistent Computation - ( Revision Submitted to Journal IEEE TIFS )](./assets/documents/Dual-Cloud%20Multi-Secret%20Sharing%20Architecture%20for%20Privacy%20Preserving%20Persistent%20Computation%20-%20(%20Revision%20Submitted%20to%20Journal%20IEEE%20TIFS%20).pdf)
 
 ## 檔案說明
 
