@@ -16,6 +16,11 @@
 
 4. Finally, run the code with `python -u "...\CloudMSS\application_1.py"`.
 
+---
+### Remark
+We are trying to build a user-friendly system with UI. Now we only have a Chinese draft version in the following link, and English ver. is still under construction.
+``` https://github.com/cislab-ntut/Demo_CloudMSS  ```
+
 ## 介紹
 
 本研究旨在開發多私密分享的計算工具，以實現高效的多方安全計算技術為目標，從而拓展資源受限設備上的應用場域。
