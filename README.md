@@ -18,9 +18,14 @@
 
 ---
 ### Remark
-We are trying to build a user-friendly system with UI. Now we only have a Chinese draft version in the following link, and English ver. is still under construction.
+We are trying to build a user-friendly system with UI. Now, we only have a Chinese draft version in the following link, and the English ver. is still under construction.
 > https://github.com/cislab-ntut/Demo_CloudMSS
 
+### Update: Experiments
+
+1. [S-box] We evaluate the representative polynomial for S-box. The result shows roughly 13 seconds to feed an x to complete the evaluation on the share domain. However, it is not independent of the number of secrets. For example, if we directly consider a data block (in 128-bit AES) with 16 Bytes as well as 16 secrets, the amortized evaluation time can be down to 1 second.
+
+---
 ## 介紹
 
 本研究旨在開發多私密分享的計算工具，以實現高效的多方安全計算技術為目標，從而拓展資源受限設備上的應用場域。
