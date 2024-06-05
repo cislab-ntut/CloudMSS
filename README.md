@@ -4,7 +4,7 @@
 
 ## Instruction (English)
 
-0. Open this project and get into the `application.py`.
+0. Open this project and get into the `application_1.py`.
 
 1. In lines 49-51, you can set the `MSS_case`, which assigns the (user, threshold) cases that run in each epoch.
 
