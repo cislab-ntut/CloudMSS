@@ -2,31 +2,31 @@
 
 ===========
 
-¸ê®Æ¶°:car
-Instances: 1728 , Attributes: 6 , Class: 4 => Total: 10368
+è³‡æ–™é›†:glass
+Instances: 213 , Attributes: 10 , Class: 7 => Total: 2130
 
-Epoch:  10  => (Train:  1718 , Test:  10 , Test/All:  0.00579 )
-Mode: knn      	 Case: None 	 ¥¿½T²v: 98.0 % 	 ¯Ó®É: 0.0018868446350097656
-Mode: dct      	 Case: None 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 0.001337122917175293
-Mode: MSS_kNN  	 Case: (2, 2) 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 1091.932049202919
-Mode: MSS_kNN  	 Case: (4, 2) 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 2092.710607767105
-Mode: MSS_kNN  	 Case: (6, 2) 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 3744.5810544013975
-Mode: MSS_kNN  	 Case: (6, 4) 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 3675.813367462158
-Mode: MSS_kNN  	 Case: (6, 6) 	 ¥¿½T²v: 99.0 % 	 ¯Ó®É: 3583.021878528595
+Epoch:  1  => (Train:  203 , Test:  10 , Test/All:  0.04695 )
+Mode: knn      	 Case: None 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 0.0030040740966796875
+Mode: dct      	 Case: None 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 0.0030107498168945312
+Mode: MSS_kNN  	 Case: (2, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 219.77350044250488
+Mode: MSS_kNN  	 Case: (4, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 444.33122158050537
+Mode: MSS_kNN  	 Case: (6, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 750.087240934372
+Mode: MSS_kNN  	 Case: (6, 4) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 739.9833331108093
+Mode: MSS_kNN  	 Case: (6, 6) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 720.6645057201385
 
 ===========
 
-¸ê®Æ¶°:breast_cancer
-Instances: 569 , Attributes: 30 , Class: 2 => Total: 17070
+è³‡æ–™é›†:balance
+Instances: 625 , Attributes: 4 , Class: 3 => Total: 2500
 
-Epoch:  10  => (Train:  559 , Test:  10 , Test/All:  0.01757 )
-Mode: knn      	 Case: None 	 ¥¿½T²v: 93.0 % 	 ¯Ó®É: 0.001808309555053711
-Mode: dct      	 Case: None 	 ¥¿½T²v: 95.0 % 	 ¯Ó®É: 0.006652235984802246
-Mode: MSS_kNN  	 Case: (2, 2) 	 ¥¿½T²v: 94.0 % 	 ¯Ó®É: 2067.7960641622544
-Mode: MSS_kNN  	 Case: (4, 2) 	 ¥¿½T²v: 94.0 % 	 ¯Ó®É: 3688.9246839284897
-Mode: MSS_kNN  	 Case: (6, 2) 	 ¥¿½T²v: 94.0 % 	 ¯Ó®É: 6411.448307204247
-Mode: MSS_kNN  	 Case: (6, 4) 	 ¥¿½T²v: 94.0 % 	 ¯Ó®É: 6304.07366309166
-Mode: MSS_kNN  	 Case: (6, 6) 	 ¥¿½T²v: 94.0 % 	 ¯Ó®É: 6148.930614113808
+Epoch:  1  => (Train:  615 , Test:  10 , Test/All:  0.016 )
+Mode: knn      	 Case: None 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 0.0010056495666503906
+Mode: dct      	 Case: None 	 æ­£ç¢ºçŽ‡: 80.0 % 	 è€—æ™‚: 0.00099945068359375
+Mode: MSS_kNN  	 Case: (2, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 256.48518991470337
+Mode: MSS_kNN  	 Case: (4, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 547.4601218700409
+Mode: MSS_kNN  	 Case: (6, 2) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 1012.3314702510834
+Mode: MSS_kNN  	 Case: (6, 4) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 948.2566115856171
+Mode: MSS_kNN  	 Case: (6, 6) 	 æ­£ç¢ºçŽ‡: 90.0 % 	 è€—æ™‚: 918.3173489570618
 
 ===========
 

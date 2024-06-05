@@ -8,17 +8,20 @@
 
 1. In lines 49-51, you can set the `MSS_case`, which assigns the (user, threshold) cases that run in each epoch.
 
-2. In line 222, you can set `epoch`, which gives the repeat rounds and calculate the average results.
+2. In line 223, you can set `epoch`, which gives the repeat rounds and calculate the average results.
 
-3. In line 324, you can set `dataName`, which decides the datasets for the experiment.
+3. In line 323, you can set `dataName`, which decides the datasets for the experiment.
  
-	- In line 323, you can see the default dataset options provided by this system.
+	- In line 316, you can see the default dataset options provided by this system.
 
 4. Finally, run the code with `python -u "...\CloudMSS\application_1.py"`.
 
 ---
+
 ### Remark
+
 We are trying to build a user-friendly system with UI. Now, we only have a Chinese draft version in the following link, and the English ver. is still under construction.
+
 > https://github.com/cislab-ntut/Demo_CloudMSS
 
 ### Update: Experiments

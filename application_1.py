@@ -100,8 +100,9 @@ def MSS_kNN(MSS, participant, n_row, n_column, test_X, n_neighbors):
 
     for i in range(test_X.shape[0]):
 
-        if(i % 10 == 0):
-            print("- query instance:", i)
+        # if(i % 10 == 0):
+        #     print("- query instance:", i)
+        print("- query instance:", i)
 
         # STEP1 client 將 每一筆 query_instance 製成 share。
         query_share_index = []
@@ -218,10 +219,8 @@ def run_code(dataset):
     print('資料集:{}'.format(dataName), file=open('application_1__log.txt', 'a+'))
     print('Instances: {} , Attributes: {} , Class: {} => Total: {}' .format( len(label) , len(data[0]) , NUM_CLASS , (len(label) * len(data[0])) ) , file=open('application_1__log.txt', 'a+'))
 
-
-    epoch=10
-    # epoch=1
-    # epoch=5
+    # epoch=10
+    epoch=1
 
     # 每一種 mode 存放一組資料 [ mode_i , case , total_accuracy = 0 , total_time_cost = 0 ]
     mode_record = []
@@ -314,14 +313,14 @@ if __name__ == '__main__':
     print('', file=open('application_1__log.txt', 'w'))
 
     """
-    # dataName = ['iris' , 'breast_cancer' , 'Bankruptcy' , 'tic-tac-toe' , 'banknote' , 'car' , 'digits' , 'mushroom' , 'nursery']
+    # dataName = ['iris' , 'Bankruptcy' , 'glass' , 'balance' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']
     # dataName = ['iris' , 'Bankruptcy' , 'breast_cancer' , 'tic-tac-toe' , 'banknote' , 'car']  # sort by instance number
     # dataName = ['iris' , 'banknote' , 'Bankruptcy' , 'car' , 'tic-tac-toe' , 'breast_cancer']  # sort by attribute number
     # dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']  # sort by total number
     """
 
     dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']  # sort by total number
-    dataName = ['iris']
+    dataName = ['glass' , 'balance']
 
     if(isinstance(dataName, list)):
         while(len(dataName) > 0):

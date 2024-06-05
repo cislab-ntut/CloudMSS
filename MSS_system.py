@@ -1142,7 +1142,8 @@ if __name__ == '__main__':
 
     compare_error = 0
 
-    echo = 100
+    # echo = 100
+    echo = 10
 
     for test in range(echo):
 
@@ -1165,3 +1166,33 @@ if __name__ == '__main__':
     # MSS.print_operation_record()
 
     # print("\n====\n")
+
+    time1 = time.time()
+
+    epoch = 100
+
+    for i in range(epoch):
+        operation_index = MSS.multiplication(pool, 1 , 2)
+
+    time2 = time.time()
+
+    time_cost = time2 - time1
+
+    print("time_cost [ MSS.multiplication() ]:", time_cost / epoch)
+
+    print("\n====\n")
+
+    time1 = time.time()
+
+    epoch = 100
+
+    for i in range(epoch):
+        operation_index = MSS.addition(pool, 1 , 2)
+
+    time2 = time.time()
+
+    time_cost = time2 - time1
+
+    print("time_cost [ MSS.addition() ]:", time_cost / epoch)
+
+    print("\n====\n")

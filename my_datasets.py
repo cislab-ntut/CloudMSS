@@ -402,7 +402,63 @@ def loading_datasets(dataName):
         
         # print(dataset.keys())
         # print(dataset.DESCR)
+
+    elif(dataName=='glass'):
+            
+        f = open('./datasets/glass.names', 'r')
+        description = f.read()
+        # print(type(description))
+        f.close
+
+        data_pd = pd.read_csv('./datasets/glass.data', header=None)
+        # print(data_pd.head())
+        # print(type(data_pd.columns))
+        
+        # print(data_pd)
+
+        data_pd = data_pd.drop(data_pd.columns[0])
+        
+        data = data_pd.drop(data_pd.columns[-1], axis=1)
+        target = data_pd[data_pd.columns[-1]]
+
+        dataset = Bunch(
+            DESCR = description,
+            data = data.values,
+            target = target.values,
+            NUM_CLASS = 7,
+            dataName = dataName
+        )
+        
+        # print(dataset.keys())
+        # print(dataset.DESCR)
     
+    elif(dataName=='balance'):
+            
+        f = open('./datasets/balance-scale.names', 'r')
+        description = f.read()
+        # print(type(description))
+        f.close
+
+        data_pd = pd.read_csv('./datasets/balance-scale.data', header=None)
+        # print(data_pd.head())
+        # print(type(data_pd.columns))
+        
+        # print(data_pd)
+        
+        data = data_pd.drop(data_pd.columns[0], axis=1)
+        target = data_pd[data_pd.columns[0]]
+
+        dataset = Bunch(
+            DESCR = description,
+            data = data.values,
+            target = target.values,
+            NUM_CLASS = 3,
+            dataName = dataName
+        )
+        
+        # print(dataset.keys())
+        # print(dataset.DESCR)
+
     '''
     資料的正規化(Normalization)：是將原始資料的數據按比例縮放於 [0, 1] 區間中，且不改變其原本分佈。
     資料標準化：將特徵值 x1 及 x2 餵入一些需計算樣本彼此的距離(例如:歐氏距離)分類器演算法中，則 x2 的影響很可能將遠大於 x1，若實際上 x1 的指標意義及重要性高於 x2，這將導致我們分析的結果失真。因此，資料的標準化是有必要的，可讓每個特徵值對結果做出相近程度的貢獻。
@@ -420,7 +476,6 @@ def loading_datasets(dataName):
 
     print( 'Instances: {} , Attributes: {} , Class: {} => Total: {}' .format( len(label) , len(data[0]) , NUM_CLASS , (len(label) * len(data[0])) ) )
     
-
     return dataset
 
 def testing_dataset_DCT_KNN(dataset):
@@ -520,9 +575,10 @@ if __name__ == '__main__':
     
     print('', file=open('my_datasets__log.txt', 'w'))
 
-    # dataName = ['iris' , 'breast_cancer' , 'Bankruptcy' , 'tic-tac-toe' , 'banknote' , 'car' , 'digits' , 'mushroom' , 'nursery']
-    # dataName = ['iris' , 'breast_cancer' , 'Bankruptcy' , 'tic-tac-toe' , 'banknote' , 'car'] # sort by total number 
-    dataName = ['iris' , 'Bankruptcy' , 'breast_cancer' , 'tic-tac-toe' , 'banknote' , 'car']  # sort by instance number
+    dataName = ['iris' , 'Bankruptcy' , 'glass' , 'balance' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer']
+    # dataName = ['iris' , 'Bankruptcy' , 'breast_cancer' , 'tic-tac-toe' , 'banknote' , 'car']  # sort by instance number
+    # dataName = ['iris' , 'Bankruptcy' , 'banknote' , 'tic-tac-toe' , 'car' , 'breast_cancer'] # sort by total number 
+    # dataName = ['glass' , 'balance']
 
     if(isinstance(dataName, list)):
         while(len(dataName) > 0):
