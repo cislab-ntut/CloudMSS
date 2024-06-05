@@ -26,7 +26,8 @@ We are trying to build a user-friendly system with UI. Now, we only have a Chine
 
 ### Update: Experiments
 
-1. [S-box] We evaluate the representative polynomial for S-box. The result shows roughly 13 seconds to feed an x to complete the evaluation on the share domain. However, it is not independent of the number of secrets. For example, if we directly consider a data block (in 128-bit AES) with 16 Bytes as well as 16 secrets, the average evaluation time can be down to less than 1 second.
+1. [S-box] We evaluate the representative polynomial for S-box. The result shows roughly 22 seconds to feed an x to complete the evaluation on the share domain. However, it is not independent of the number of secrets. For example, if we directly consider a data block (in 128-bit AES) with 16 Bytes as well as 16 secrets, the average evaluation time can be down to less than 2 sec. It is also verifiable by application_2.py in the repo.
+2. [New test dataset evaluation] There are two newly added test datasets. - glass：https://archive.ics.uci.edu/dataset/42/glass+identification - balance：https://archive.ics.uci.edu/dataset/12/balance+scale
 
 ---
 ## 介紹
